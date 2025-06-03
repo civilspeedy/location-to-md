@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -10,6 +11,9 @@ import (
 	"github.com/playwright-community/playwright-go"
 )
 
+const URL string = "https://www.google.com/maps/search/"
+
+// Reads through search.txt and returns each line as element of array.
 func getSearchList() []string {
 	file, err := os.Open("search.txt")
 	if err != nil {
@@ -26,9 +30,21 @@ func getSearchList() []string {
 	return strArr
 }
 
+// Loops through provides location list, replaces spaces with "+"
+// and then adds onto the end of the search url.
+// List of URLS is returned.
+func createSearchStrings(locations []string) []string {
+	var urlArr []string
+	for _, location := range locations {
+		withPluses := strings.ReplaceAll(location, " ", "+")
+		urlArr = append(urlArr, URL+withPluses)
+	}
+	return urlArr
+}
+
 func takeScreenshot(tab playwright.Page) {
 	if _, err := tab.Screenshot(playwright.PageScreenshotOptions{
-		Path: playwright.String("foo.png"),
+		Path: playwright.String("screenshot.png"),
 	}); err != nil {
 		log.Fatalf("could not create screenshot: %v", err)
 	}
@@ -80,5 +96,7 @@ func runScraper() {
 }
 
 func main() {
-
+	searchList := getSearchList()
+	urls := createSearchStrings(searchList)
+	fmt.Println(urls)
 }
