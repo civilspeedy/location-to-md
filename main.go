@@ -45,6 +45,7 @@ func outputLinks(links []string, searchList []string) error {
 
 	for index, link := range links {
 		str := fmt.Sprintf("- [%v](%v)", searchList[index], link)
+		fmt.Println(str)
 		_, err := fmt.Fprintln(file, str)
 		if err != nil {
 			return err
