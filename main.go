@@ -3,12 +3,16 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/playwright-community/playwright-go"
 	"log"
 	"os"
 	"strings"
-	"time"
+)
 
-	"github.com/playwright-community/playwright-go"
+var (
+	driver  *playwright.Playwright
+	browser playwright.Browser
+	page    playwright.Page
 )
 
 const URL string = "https://www.google.com/maps/search/"
@@ -30,6 +34,28 @@ func getSearchList() []string {
 	return strArr
 }
 
+func outputLinks(links []string, searchList []string) error {
+	file, err := os.Create("out.txt")
+	if err != nil {
+		return err
+	}
+
+	for index, link := range links {
+		str := fmt.Sprintf("- [%v](%v)", searchList[index], link)
+		_, err := fmt.Fprintln(file, str)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = file.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Loops through provides location list, replaces spaces with "+"
 // and then adds onto the end of the search url.
 // List of URLS is returned.
@@ -42,61 +68,81 @@ func createSearchStrings(locations []string) []string {
 	return urlArr
 }
 
-func takeScreenshot(tab playwright.Page) {
-	if _, err := tab.Screenshot(playwright.PageScreenshotOptions{
-		Path: playwright.String("screenshot.png"),
-	}); err != nil {
-		log.Fatalf("could not create screenshot: %v", err)
+func getMapsLink(url string) (string, error) {
+	if _, err := page.Goto(url,
+		playwright.PageGotoOptions{
+			WaitUntil: playwright.WaitUntilStateDomcontentloaded,
+		}); err != nil {
+		return "", err
 	}
+
+	currentUrl := page.URL()
+	if strings.Contains(currentUrl, "consent.google.com") {
+		rejectBtn := page.GetByLabel("Reject all").First()
+		err := rejectBtn.Click()
+		if err != nil {
+			return "", err
+		}
+	}
+	shareButton := page.GetByLabel("share").First()
+	err := shareButton.Click()
+	if err != nil {
+		return "", err
+	}
+
+	link, err := page.Locator(".vrsrZe:not(.vrsrZe--disabled)").First().InputValue()
+	if err != nil {
+		return "", err
+	}
+
+	return link, nil
 }
 
-func runScraper() {
-	pw, err := playwright.Run()
+func main() {
+	err := playwright.Install()
+	if err != nil {
+		log.Fatalln("Err install playwrite: ", err)
+	}
+
+	driver, err = playwright.Run()
 
 	if err != nil {
 		log.Fatalln("Error starting playwrite: ", err)
 	}
 
-	ff, err := pw.Firefox.Launch(playwright.BrowserTypeLaunchOptions{
-		Headless: playwright.Bool(false)})
+	browser, err = driver.Firefox.Launch(playwright.BrowserTypeLaunchOptions{
+		Headless: playwright.Bool(true)})
 	if err != nil {
 		log.Fatalln("Error launching firefox: ", err)
 	}
 
-	tab, err := ff.NewPage()
+	page, err = browser.NewPage()
 	if err != nil {
 		log.Fatalln("Error create new page: ", err)
 	}
 
-	if _, err = tab.Goto("https://www.google.com/maps/search/Eiffel+Tower+Paris+France",
-		playwright.PageGotoOptions{
-			WaitUntil: playwright.WaitUntilStateDomcontentloaded,
-		}); err != nil {
-		log.Fatalln("Could not go to url: ", err)
-	}
-
-	url := tab.URL()
-	if strings.Contains(url, "consent.google.com") {
-		rejectBtn := tab.GetByLabel("Reject all").First()
-		err := rejectBtn.Click()
-		if err != nil {
-			log.Fatalln("Unable to click: ", err)
-		}
-
-		takeScreenshot(tab)
-		time.Sleep(100 * time.Second)
-	}
-
-	if err = ff.Close(); err != nil {
-		log.Fatalf("could not close browser: %v", err)
-	}
-	if err = pw.Stop(); err != nil {
-		log.Fatalf("could not stop Playwright: %v", err)
-	}
-}
-
-func main() {
 	searchList := getSearchList()
 	urls := createSearchStrings(searchList)
-	fmt.Println(urls)
+
+	var links []string
+	for _, url := range urls {
+		link, err := getMapsLink(url)
+		if err != nil {
+			log.Fatalln("Failed geting link for ", url, ", err: ", err)
+		}
+		links = append(links, link)
+	}
+
+	err = outputLinks(links, searchList)
+	if err != nil {
+		log.Fatalln("Failed writing out links")
+	}
+
+	if err := browser.Close(); err != nil {
+		log.Fatalf("could not close browser: %v", err)
+	}
+	if err := driver.Stop(); err != nil {
+		log.Fatalf("could not stop Playwright: %v", err)
+	}
+	log.Println("Done! Check out.txt")
 }
