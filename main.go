@@ -3,10 +3,12 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/playwright-community/playwright-go"
 	"log"
 	"os"
+	"runtime"
 	"strings"
+
+	"github.com/playwright-community/playwright-go"
 )
 
 var (
@@ -103,14 +105,16 @@ func getMapsLink(url string) (string, error) {
 func main() {
 	err := playwright.Install()
 	if err != nil {
-		log.Fatalln("Err install playwrite: ", err)
+		log.Fatalln("Err install playwright: ", err)
 	}
 
 	driver, err = playwright.Run()
 
 	if err != nil {
-		log.Fatalln("Error starting playwrite: ", err)
+		log.Fatalln("Error starting playwright: ", err)
 	}
+
+	fmt.Println(runtime.GOOS)
 
 	browser, err = driver.Firefox.Launch(playwright.BrowserTypeLaunchOptions{
 		Headless: playwright.Bool(true)})
@@ -130,7 +134,7 @@ func main() {
 	for _, url := range urls {
 		link, err := getMapsLink(url)
 		if err != nil {
-			log.Fatalln("Failed geting link for ", url, ", err: ", err)
+			log.Fatalln("Failed getting link for ", url, ", err: ", err)
 		}
 		links = append(links, link)
 	}
