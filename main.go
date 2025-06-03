@@ -34,6 +34,7 @@ func getSearchList() []string {
 	return strArr
 }
 
+// Loops through array of provided links. Formats and writes to txt.
 func outputLinks(links []string, searchList []string) error {
 	file, err := os.Create("out.txt")
 	if err != nil {
@@ -68,6 +69,7 @@ func createSearchStrings(locations []string) []string {
 	return urlArr
 }
 
+// Searches for a location on google maps and fetches the share link which is returned.
 func getMapsLink(url string) (string, error) {
 	if _, err := page.Goto(url,
 		playwright.PageGotoOptions{
