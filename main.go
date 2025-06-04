@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"runtime"
 	"strings"
 
 	"github.com/playwright-community/playwright-go"
@@ -19,11 +18,11 @@ var (
 
 const URL string = "https://www.google.com/maps/search/"
 
-// Reads through search.txt and returns each line as element of array.
+// Reads through in.txt and returns each line as element of array.
 func getSearchList() []string {
-	file, err := os.Open("search.txt")
+	file, err := os.Open("in.txt")
 	if err != nil {
-		log.Fatalln("Unable to open file search.txt: ", err)
+		log.Fatalln("Unable to open file in.txt: ", err)
 	}
 
 	scanner := bufio.NewScanner(file)
@@ -115,12 +114,10 @@ func main() {
 		log.Fatalln("Error starting playwright: ", err)
 	}
 
-	fmt.Println(runtime.GOOS)
-
-	browser, err = driver.Firefox.Launch(playwright.BrowserTypeLaunchOptions{
-		Headless: playwright.Bool(true)})
+	browser, err = driver.Chromium.Launch(playwright.BrowserTypeLaunchOptions{
+		Headless: playwright.Bool(false)})
 	if err != nil {
-		log.Fatalln("Error launching firefox: ", err)
+		log.Fatalln("Error launching browser: ", err)
 	}
 
 	page, err = browser.NewPage()
