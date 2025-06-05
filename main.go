@@ -38,38 +38,6 @@ func getSearchList() error {
 	return nil
 }
 
-// Loops through array of provided links. Formats and writes to txt.
-func outputLinks() error {
-	file, err := os.Create("out.txt")
-	if err != nil {
-		return err
-	}
-
-	var copy string
-	for index, link := range mapLinks {
-		str := fmt.Sprintf("- [%v](%v)", searchList[index], link)
-		copy += "\n" + str
-		_, err := fmt.Fprintln(file, str)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = clipboard.Init()
-	if err != nil {
-		return err
-	}
-
-	clipboard.Write(clipboard.FmtText, []byte(copy))
-
-	err = file.Close()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // Loops through provides location list, replaces spaces with "+"
 // and then adds onto the end of the search url.
 func createSearchStrings() {
@@ -109,6 +77,38 @@ func getMapsLink(url string) error {
 	}
 
 	mapLinks = append(mapLinks, link)
+
+	return nil
+}
+
+// Loops through array of provided links. Formats and writes to txt.
+func outputLinks() error {
+	file, err := os.Create("out.txt")
+	if err != nil {
+		return err
+	}
+
+	var copy string
+	for index, link := range mapLinks {
+		str := fmt.Sprintf("- [%v](%v)", searchList[index], link)
+		copy += "\n" + str
+		_, err := fmt.Fprintln(file, str)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = clipboard.Init()
+	if err != nil {
+		return err
+	}
+
+	clipboard.Write(clipboard.FmtText, []byte(copy))
+
+	err = file.Close()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
