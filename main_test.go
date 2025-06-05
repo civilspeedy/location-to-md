@@ -1,0 +1,45 @@
+package main
+
+import (
+	"reflect"
+	"testing"
+)
+
+var (
+	testSearchList []string
+)
+
+func init() {
+	fileLoc = "./test-assets/test-in.txt"
+	testSearchList = []string{
+		"Deoksugung Palace",
+		"National Museum of Korea",
+		"Jade Emperor Pagoda",
+		"War Remnants Museum Ho Chi Minh City",
+		"HCMC Museum",
+		"Central Post Office Ho Chi Minh City",
+		"Hoan Kiem Lake",
+		"Temple of Literature Hanoi",
+		"Imperial Citadel of Thang Long",
+		"National Museum of Vietnamese History Hanoi",
+		"Bach Ma Temple",
+		"Vietnam Military History Museum Hanoi",
+		"Dong Xuan Market",
+		"Martyrs' Monument Hanoi",
+		"Tran Quoc Pagoda",
+		"Fine Arts Museum of Vietnam",
+		"Vietnamese Women’s Museum Hanoi",
+		"Đường Tàu",
+		"Bun Cha Huong Lien(Restuarante)",
+		"Ho Chi Minh Mausoleum",
+		"MF Spa Hanoi",
+	}
+}
+
+// Unit test for getSearchlist
+func TestGetSearchList(t *testing.T) {
+	err := getSearchList()
+	if !reflect.DeepEqual(searchList, testSearchList) || err != nil {
+		t.Error("Failed to get correct search items: ", err)
+	}
+}

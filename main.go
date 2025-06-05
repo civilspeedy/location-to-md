@@ -12,40 +12,41 @@ import (
 )
 
 var (
-	driver   *playwright.Playwright
-	browser  playwright.Browser
-	page     playwright.Page
-	mapLinks []string
+	driver     *playwright.Playwright
+	browser    playwright.Browser
+	page       playwright.Page
+	mapLinks   []string
+	urlArr     []string
+	searchList []string
+	fileLoc    string
 )
 
 const URL string = "https://www.google.com/maps/search/"
 
 // Reads through in.txt and returns each line as element of array.
-func getSearchList() []string {
-	file, err := os.Open("in.txt")
+func getSearchList() error {
+	file, err := os.Open(fileLoc)
 	if err != nil {
-		log.Fatalln("Unable to open file in.txt: ", err)
+		return err
 	}
 
 	scanner := bufio.NewScanner(file)
 
-	var strArr []string
 	for scanner.Scan() {
-		strArr = append(strArr, scanner.Text())
+		searchList = append(searchList, scanner.Text())
 	}
-
-	return strArr
+	return nil
 }
 
 // Loops through array of provided links. Formats and writes to txt.
-func outputLinks(links []string, searchList []string) error {
+func outputLinks() error {
 	file, err := os.Create("out.txt")
 	if err != nil {
 		return err
 	}
 
 	var copy string
-	for index, link := range links {
+	for index, link := range mapLinks {
 		str := fmt.Sprintf("- [%v](%v)", searchList[index], link)
 		copy += "\n" + str
 		_, err := fmt.Fprintln(file, str)
@@ -71,14 +72,11 @@ func outputLinks(links []string, searchList []string) error {
 
 // Loops through provides location list, replaces spaces with "+"
 // and then adds onto the end of the search url.
-// List of URLS is returned.
-func createSearchStrings(locations []string) []string {
-	var urlArr []string
-	for _, location := range locations {
+func createSearchStrings() {
+	for _, location := range searchList {
 		withPluses := strings.ReplaceAll(location, " ", "+")
 		urlArr = append(urlArr, URL+withPluses)
 	}
-	return urlArr
 }
 
 // Searches for a location on google maps and fetches the share link which is appended to shareLinks.
@@ -117,6 +115,8 @@ func getMapsLink(url string) error {
 
 func main() {
 	mapLinks = nil
+	urlArr = nil
+	fileLoc = "in.txt"
 
 	err := playwright.Install()
 	if err != nil {
@@ -140,17 +140,21 @@ func main() {
 		log.Fatalln("Error create new page: ", err)
 	}
 
-	searchList := getSearchList()
-	urls := createSearchStrings(searchList)
+	err = getSearchList()
+	if err != nil {
+		log.Fatalln("Unable to get searchList: ", err)
+	}
 
-	for _, url := range urls {
+	createSearchStrings()
+
+	for _, url := range urlArr {
 		err := getMapsLink(url)
 		if err != nil {
 			log.Fatalln("Failed getting link for ", url, ", err: ", err)
 		}
 	}
 
-	err = outputLinks(mapLinks, searchList)
+	err = outputLinks()
 	if err != nil {
 		log.Fatalln("Failed writing out links")
 	}
@@ -158,8 +162,10 @@ func main() {
 	if err := browser.Close(); err != nil {
 		log.Fatalf("could not close browser: %v", err)
 	}
+
 	if err := driver.Stop(); err != nil {
 		log.Fatalf("could not stop Playwright: %v", err)
 	}
-	log.Println("\x1b[1;35mDone! Copied to clipboard, or view out.txt\x1b[0m")
+
+	fmt.Println("\x1b[1;35mDone! Copied to clipboard, or view out.txt\x1b[0m")
 }
