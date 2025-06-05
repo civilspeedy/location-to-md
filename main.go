@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/playwright-community/playwright-go"
+	"golang.design/x/clipboard"
 )
 
 var (
@@ -42,14 +43,22 @@ func outputLinks(links []string, searchList []string) error {
 		return err
 	}
 
+	var copy string
 	for index, link := range links {
 		str := fmt.Sprintf("- [%v](%v)", searchList[index], link)
-		fmt.Println(str)
+		copy += "\n" + str
 		_, err := fmt.Fprintln(file, str)
 		if err != nil {
 			return err
 		}
 	}
+
+	err = clipboard.Init()
+	if err != nil {
+		return err
+	}
+
+	clipboard.Write(clipboard.FmtText, []byte(copy))
 
 	err = file.Close()
 	if err != nil {
@@ -148,5 +157,5 @@ func main() {
 	if err := driver.Stop(); err != nil {
 		log.Fatalf("could not stop Playwright: %v", err)
 	}
-	log.Println("Done! Check out.txt")
+	log.Println("Done! Copied to clipboard, or view out.txt")
 }
