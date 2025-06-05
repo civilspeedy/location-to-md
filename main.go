@@ -12,9 +12,10 @@ import (
 )
 
 var (
-	driver  *playwright.Playwright
-	browser playwright.Browser
-	page    playwright.Page
+	driver   *playwright.Playwright
+	browser  playwright.Browser
+	page     playwright.Page
+	mapLinks []string
 )
 
 const URL string = "https://www.google.com/maps/search/"
@@ -80,13 +81,13 @@ func createSearchStrings(locations []string) []string {
 	return urlArr
 }
 
-// Searches for a location on google maps and fetches the share link which is returned.
-func getMapsLink(url string) (string, error) {
+// Searches for a location on google maps and fetches the share link which is appended to shareLinks.
+func getMapsLink(url string) error {
 	if _, err := page.Goto(url,
 		playwright.PageGotoOptions{
 			WaitUntil: playwright.WaitUntilStateDomcontentloaded,
 		}); err != nil {
-		return "", err
+		return err
 	}
 
 	currentUrl := page.URL()
@@ -94,24 +95,29 @@ func getMapsLink(url string) (string, error) {
 		rejectBtn := page.GetByLabel("Reject all").First()
 		err := rejectBtn.Click()
 		if err != nil {
-			return "", err
+			return err
 		}
 	}
+
 	shareButton := page.GetByLabel("share").First()
 	err := shareButton.Click()
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	link, err := page.Locator(".vrsrZe:not(.vrsrZe--disabled)").First().InputValue()
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return link, nil
+	mapLinks = append(mapLinks, link)
+
+	return nil
 }
 
 func main() {
+	mapLinks = nil
+
 	err := playwright.Install()
 	if err != nil {
 		log.Fatalln("Err install playwright: ", err)
@@ -137,16 +143,14 @@ func main() {
 	searchList := getSearchList()
 	urls := createSearchStrings(searchList)
 
-	var links []string
 	for _, url := range urls {
-		link, err := getMapsLink(url)
+		err := getMapsLink(url)
 		if err != nil {
 			log.Fatalln("Failed getting link for ", url, ", err: ", err)
 		}
-		links = append(links, link)
 	}
 
-	err = outputLinks(links, searchList)
+	err = outputLinks(mapLinks, searchList)
 	if err != nil {
 		log.Fatalln("Failed writing out links")
 	}
@@ -157,5 +161,5 @@ func main() {
 	if err := driver.Stop(); err != nil {
 		log.Fatalf("could not stop Playwright: %v", err)
 	}
-	log.Println("Done! Copied to clipboard, or view out.txt")
+	log.Println("\x1b[1;35mDone! Copied to clipboard, or view out.txt\x1b[0m")
 }
