@@ -1,3 +1,21 @@
-I completed this quick little project as I was getting annoyed by the planning of my travel. I kept having to manually obtain links for attractions I wanted to see, and then format them for Obsidian. This was made over a few hours and isn't tested properly, feedback welcome though.
-- Put search items on sepetate lines in in.txt.
-- Output will but returned in newly created out.txt.
+# Location to MarkDown
+
+## Description
+
+Executable written in GoLang that uses browser automation to fetch the "Share" link for location on google maps. This "Share" link is then formatted into a markdown link with the location name and output into a txt file, as well as copied to clipboard.
+
+## Reason
+
+While I was planning my travel break, it became rather tedious having to manually copy and format the locations I wanted to visit into my notes app ([Obsidian](https://obsidian.md/)). I felt this would be a good opportunity to explore a new programming language, and Golang caught my eye, as well as to learn about browser automation.
+
+## External Libraries:
+
+- [Playwright](https://github.com/playwright-community/playwright-go)
+
+## Usage
+
+- Ensure in.txt is in the same directory as the executable.
+- List locations in in.txt with new lines between each one.
+- Putting the city and country in the location name will yield faster and more accurate results.
+- If Playwright is not installed on your device, the executable may take a moment to install the browser drivers.
+- An out.txt file will be created with the formatted locations inside.
