@@ -2,7 +2,7 @@
 
 ## Description
 
-Executable written in GoLang that uses browser automation to fetch the "Share" link for location on google maps. This "Share" link is then formatted into a markdown link with the location name and output into a txt file, as well as copied to clipboard.
+Executable written in GoLang that uses browser automation to fetch the "Share" link for locations on google maps. This "Share" link is then formatted into a markdown link with the location name and output into a txt file, as well as copied to clipboard.
 
 ## Reason
 
